@@ -1,0 +1,35 @@
+{
+  "name": "stellarpredict-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "StellarPredict indexer + REST API + WebSocket server",
+  "type": "module",
+  "scripts": {
+    "dev:api": "tsx watch src/api/server.ts",
+    "dev:indexer": "tsx watch src/indexer/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start:api": "node dist/api/server.js",
+    "start:indexer": "node dist/indexer/index.js",
+    "migrate": "tsx src/db/migrate.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12",
+    "cors": "^2.8",
+    "dotenv": "^16",
+    "express": "^4.18",
+    "express-rate-limit": "^7",
+    "ioredis": "^5.3",
+    "pg": "^8.11",
+    "socket.io": "^4.7",
+    "zod": "^3.22"
+  },
+  "devDependencies": {
+    "@types/cors": "^2",
+    "@types/express": "^4",
+    "@types/pg": "^8",
+    "nodemon": "^3",
+    "tsx": "^4",
+    "typescript": "^5.3"
+  }
+}
