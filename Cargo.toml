@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = [
+    "contracts/oracle_registry",
+    "contracts/token_base",
+    "contracts/yes_token",
+    "contracts/no_token",
+    "contracts/lp_token",
+    "contracts/market",
+    "contracts/factory",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["StellarPredict"]
+license = "MIT"
+
+[workspace.dependencies]
+soroban-sdk = "22"
+
+# NOTE: In a Cargo workspace, profile settings are only honored at the workspace
+# root, so the release profile defined in the spec lives here (not per-crate).
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
