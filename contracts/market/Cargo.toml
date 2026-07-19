@@ -1,0 +1,29 @@
+[package]
+name = "market"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# Compiles the on-chain Market contract (`#[contract]`/`#[contractimpl]`) and its
+# wasm exports. On by default so `cargo build -p market` produces market.wasm.
+# Dependents that only need the param types + generated `MarketClient` (the
+# factory) depend with `default-features = false`, so the Market's wasm exports
+# are NOT linked into their own contract — otherwise the duplicated `initialize`
+# export collides and the host can no longer resolve the factory's `initialize`.
+default = ["contract"]
+contract = []
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+oracle_registry = { path = "../oracle_registry" }
+yes_token = { path = "../yes_token" }
+no_token = { path = "../no_token" }
+lp_token = { path = "../lp_token" }
