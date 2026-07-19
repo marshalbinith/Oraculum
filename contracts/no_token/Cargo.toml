@@ -1,0 +1,16 @@
+[package]
+name = "no_token"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+token_base = { path = "../token_base" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
