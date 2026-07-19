@@ -1,0 +1,23 @@
+[package]
+name = "factory"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+# Used only for the Market param structs + generated client. Markets are
+# deployed from an uploaded wasm hash at runtime, not from embedded code.
+# `default-features = false` drops the Market's `#[contractimpl]` so its wasm
+# exports are not linked into factory.wasm (which would shadow the factory's own
+# `initialize`). See contracts/market/Cargo.toml for the full rationale.
+market = { path = "../market", default-features = false }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+yes_token = { path = "../yes_token" }
+oracle_registry = { path = "../oracle_registry" }
