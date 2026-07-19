@@ -1,0 +1,82 @@
+name: CI
+
+# Continuous integration: contract test/build gate + frontend lint/build/test.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Smart contracts (Rust / Soroban) ────────────────────────────────
+  contracts:
+    name: Smart contracts (test + wasm build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (+ wasm targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none, wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      # The factory's tests `contractimport!` the market/token wasm from
+      # target/wasm32v1-none/release, so those artifacts must exist BEFORE
+      # `cargo test`. Build the (non-factory) deployable wasm first — factory is
+      # excluded here to avoid Cargo feature-unification with market.
+      - name: Build deployable wasm (wasm32v1-none)
+        run: >
+          cargo build --target wasm32v1-none --release
+          -p oracle_registry -p yes_token -p no_token -p lp_token -p market
+
+      # Run from the Rust workspace root (contracts live under contracts/*).
+      - name: cargo test (workspace)
+        run: cargo test --workspace
+
+      # Extra compile gate on the historical Soroban target.
+      - name: cargo build wasm (release)
+        run: cargo build --target wasm32-unknown-unknown --release
+
+  # ── Frontend (Next.js 14 / TypeScript) ──────────────────────────────
+  frontend:
+    name: Frontend (lint + build + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_STELLAR_NETWORK: testnet
+          NEXT_PUBLIC_SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+          NEXT_PUBLIC_NETWORK_PASSPHRASE: "Test SDF Network ; September 2015"
+
+      - name: Test
+        run: npm run test

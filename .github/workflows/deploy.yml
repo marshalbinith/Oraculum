@@ -1,0 +1,79 @@
+name: CD
+
+# Continuous deployment on push to main:
+#   1. deploy-contract  → build deployable wasm + deploy factory to testnet
+#   2. deploy-frontend  → build with contract env + deploy to Vercel
+#
+# Requires these GitHub secrets:
+#   STELLAR_SECRET_KEY            (funded testnet identity, S...)
+#   NEXT_PUBLIC_CONTRACT_ID       (factory contract id, C...)
+#   NEXT_PUBLIC_SOROBAN_RPC_URL   (https://soroban-testnet.stellar.org)
+#   NEXT_PUBLIC_NETWORK_PASSPHRASE("Test SDF Network ; September 2015")
+#   VERCEL_TOKEN                  (Vercel deploy token)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # ── Deploy smart contract ───────────────────────────────────────────
+  deploy-contract:
+    name: Deploy contract (testnet)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (+ wasm target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Deployable Soroban wasm uses the wasm32v1-none target (the default
+          # wasm32-unknown-unknown emits reference-types the host VM rejects).
+          targets: wasm32v1-none
+
+      - name: Install Stellar CLI
+        run: cargo install --locked stellar-cli --features opt
+
+      # `stellar contract build` compiles every workspace contract to the
+      # deployable wasm32v1-none target under target/wasm32v1-none/release/.
+      - name: Build contract wasm
+        run: stellar contract build
+
+      - name: Deploy factory to testnet
+        run: |
+          stellar contract deploy \
+            --wasm target/wasm32v1-none/release/factory.wasm \
+            --source ${{ secrets.STELLAR_SECRET_KEY }} \
+            --network testnet
+
+  # ── Deploy frontend ─────────────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy frontend (Vercel)
+    needs: [deploy-contract]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CONTRACT_ID: ${{ secrets.NEXT_PUBLIC_CONTRACT_ID }}
+          NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS: ${{ secrets.NEXT_PUBLIC_CONTRACT_ID }}
+          NEXT_PUBLIC_SOROBAN_RPC_URL: ${{ secrets.NEXT_PUBLIC_SOROBAN_RPC_URL }}
+          NEXT_PUBLIC_NETWORK_PASSPHRASE: ${{ secrets.NEXT_PUBLIC_NETWORK_PASSPHRASE }}
+
+      - name: Deploy to Vercel
+        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
