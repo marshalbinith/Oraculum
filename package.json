@@ -1,0 +1,19 @@
+{
+  "name": "stellarpredict",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AMM-based prediction market on Stellar Soroban — Rust contracts (root Cargo workspace) + Node backend + Next.js frontend. The Node projects live in backend/ and frontend/; this root package.json just delegates to them so npm commands work from the repo root.",
+  "license": "MIT",
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev": "npm --prefix frontend run dev -- -p 3020",
+    "dev:api": "npm --prefix backend run dev:api",
+    "dev:indexer": "npm --prefix backend run dev:indexer",
+    "dev:web": "npm --prefix frontend run dev -- -p 3020",
+    "migrate": "npm --prefix backend run migrate",
+    "build:backend": "npm --prefix backend run build",
+    "build:web": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:web",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck"
+  }
+}
