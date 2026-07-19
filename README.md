@@ -1,5 +1,10 @@
 # StellarPredict
 
+[![CI](https://github.com/marshalbinith/Oraculum/actions/workflows/ci.yml/badge.svg)](https://github.com/marshalbinith/Oraculum/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Stellar](https://img.shields.io/badge/Stellar-Soroban%20testnet-7B00FF)](https://stellar.org/soroban)
+[![Live demo](https://img.shields.io/badge/demo-oraculumpredict.vercel.app-brightgreen)](https://oraculumpredict.vercel.app)
+
 An AMM-based decentralized **prediction market** protocol on **Stellar Soroban**.
 Anyone can open a binary (YES / NO) market on any oracle-backed question; shares
 are priced by a constant-product market maker, resolved by an on-chain price
